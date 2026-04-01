@@ -5,40 +5,46 @@ workflow:
     - if: $CI_COMMIT_BRANCH == "main"
 
 variables:
-  NODE_VERSION: '22'
+  # bookworm = pełny glibc (native moduły Tailwind / Vite na Linux działają stabilnie)
+  NODE_IMAGE: node:22-bookworm
+  NPM_CONFIG_CACHE: $CI_PROJECT_DIR/.npm
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_AUDIT: "false"
 
 stages:
   - test
 
-.web_template: &web_job
-  image: node:${NODE_VERSION}
+.web_cache: &web_cache
   cache:
-    key: web-${CI_COMMIT_REF_SLUG}
+    key:
+      files:
+        - apps/web/package-lock.json
     paths:
-      - apps/web/node_modules/
-  before_script:
-    - cd apps/web
-    - npm ci
+      - .npm/
 
-.api_template: &api_job
-  image: node:${NODE_VERSION}
+.api_cache: &api_cache
   cache:
-    key: api-${CI_COMMIT_REF_SLUG}
+    key:
+      files:
+        - apps/api/package-lock.json
     paths:
-      - apps/api/node_modules/
-  before_script:
-    - cd apps/api
-    - npm ci
+      - .npm/
 
 web:build:
-  <<: *web_job
+  image: $NODE_IMAGE
   stage: test
+  <<: *web_cache
   script:
+    - cd apps/web
+    - npm ci
     - npm run build
 
 api:test:
-  <<: *api_job
+  image: $NODE_IMAGE
   stage: test
+  <<: *api_cache
   script:
+    - cd apps/api
+    - npm ci
     - npm run build
     - npm run test
