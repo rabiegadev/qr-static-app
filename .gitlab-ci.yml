@@ -5,7 +5,6 @@ workflow:
     - if: $CI_COMMIT_BRANCH == "main"
 
 variables:
-  # bookworm = pełny glibc (native moduły Tailwind / Vite na Linux działają stabilnie)
   NODE_IMAGE: node:22-bookworm
   NPM_CONFIG_CACHE: $CI_PROJECT_DIR/.npm
   NPM_CONFIG_FUND: "false"
@@ -14,39 +13,27 @@ variables:
 stages:
   - test
 
-.web_cache: &web_cache
+.cache_root: &cache_root
   cache:
     key:
       files:
-        - apps/web/package-lock.json
-    paths:
-      - .npm/
-
-.api_cache: &api_cache
-  cache:
-    key:
-      files:
-        - apps/api/package-lock.json
+        - package-lock.json
     paths:
       - .npm/
 
 web:build:
   image: $NODE_IMAGE
   stage: test
-  <<: *web_cache
+  <<: *cache_root
   script:
-    - cd apps/web
-    # npm ci bywa z błędem na opcjonalnych @rolldown/* (Vite 8 / Linux); npm install respektuje lockfile
-    - npm install -g npm@11
-    - npm install
-    - npm run build
+    - npm ci
+    - npm run build -w web
 
 api:test:
   image: $NODE_IMAGE
   stage: test
-  <<: *api_cache
+  <<: *cache_root
   script:
-    - cd apps/api
     - npm ci
-    - npm run build
-    - npm run test
+    - npm run build -w api
+    - npm run test -w api

@@ -1,6 +1,9 @@
 {
   "name": "qr-static-app",
   "private": true,
+  "overrides": {
+    "vite": "6.3.5"
+  },
   "workspaces": ["apps/*"],
   "scripts": {
     "dev": "npm run dev -w web",

@@ -9,33 +9,25 @@ on:
 jobs:
   web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      # npm ci często nie instaluje opcjonalnych bindingów @rolldown/* (Vite 8) na Linuxie — npm/cli#4828
-      - run: npm install -g npm@11
-      - run: npm install
-      - run: npm run build
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run build -w web
 
   api:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: apps/api/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run build
-      - run: npm run test
+      - run: npm run build -w api
+      - run: npm run test -w api

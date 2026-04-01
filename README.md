@@ -28,13 +28,13 @@ npm run start:dev
 
 **Propozycja:** na start wdrożenie **tylko `apps/web`** na Vercel lub Cloudflare Pages — zero serwera, najniższy koszt, własna domena w kilka minut. NestJS warto dodać, gdy pojawi się realna potrzeba API (konta, szablony po stronie serwera, analityka).
 
-W repozytorium jest przykładowy `vercel.json` przy **korzeniu** repo (build z `apps/web`). Jeśli w Vercel ustawisz **Root Directory** na `apps/web`, możesz usunąć lub zignorować ten plik i polegać na ustawieniach UI.
+W repozytorium jest `vercel.json` przy **korzeniu** repo (`npm install` + `npm run build -w web`). W Vercel ustaw **Root Directory** na katalog główny repozytorium (`.`), nie na `apps/web` — inaczej instalacja workspace się nie uda.
 
 ## CI/CD
 
 - **GitHub:** `.github/workflows/ci.yml` — build frontu i test + build API przy push/PR na `main`/`master`.
 - **GitLab:** `.gitlab-ci.yml` — analogicznie (dostosuj reguły gałęzi pod swój flow).
-- Job **web** używa `npm install` (zamiast `npm ci`), bo Vite 8/Rolldown potrzebuje opcjonalnych binariów pod Linux; samo `npm ci` bywa z tym niestabilne ([npm/cli#4828](https://github.com/npm/cli/issues/4828)).
+- CI instaluje z **korzenia monorepo** (`npm ci`), build: `npm run build -w web` / `-w api`. Front jest na **Vite 6** (bez Rolldown — unika problemów z natywnymi bindingami na Linuxie); wersja wymuszona `overrides` w głównym `package.json`.
 
 Powielanie na GitHub i GitLab: dodaj dwa remotes (`origin` + `gitlab`) i `git push` na oba albo użyj mirror — pipeline uruchomi się osobno w każdej platformie.
 
