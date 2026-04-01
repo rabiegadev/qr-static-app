@@ -1,0 +1,44 @@
+# Dostosuj gałąź w workflow.rules, jeśli używasz innej niż main
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+variables:
+  NODE_VERSION: '22'
+
+stages:
+  - test
+
+.web_template: &web_job
+  image: node:${NODE_VERSION}
+  cache:
+    key: web-${CI_COMMIT_REF_SLUG}
+    paths:
+      - apps/web/node_modules/
+  before_script:
+    - cd apps/web
+    - npm ci
+
+.api_template: &api_job
+  image: node:${NODE_VERSION}
+  cache:
+    key: api-${CI_COMMIT_REF_SLUG}
+    paths:
+      - apps/api/node_modules/
+  before_script:
+    - cd apps/api
+    - npm ci
+
+web:build:
+  <<: *web_job
+  stage: test
+  script:
+    - npm run build
+
+api:test:
+  <<: *api_job
+  stage: test
+  script:
+    - npm run build
+    - npm run test
