@@ -58,6 +58,10 @@ const pl: Dict = {
   colorTargetFg2: 'Drugi kolor modułów',
   colorTargetBg1: 'Kolor tła kodu',
   colorTargetBg2: 'Drugie tło',
+  footerHome: 'Strona główna',
+  ariaFacebook: 'Facebook — otwiera się w nowej karcie',
+  ariaInstagram: 'Instagram — otwiera się w nowej karcie',
+  ariaYoutube: 'YouTube — otwiera się w nowej karcie',
 }
 
 const en: Dict = {
@@ -116,6 +120,10 @@ const en: Dict = {
   colorTargetFg2: 'Second module color',
   colorTargetBg1: 'QR background',
   colorTargetBg2: 'Second background',
+  footerHome: 'Home',
+  ariaFacebook: 'Facebook — opens in a new tab',
+  ariaInstagram: 'Instagram — opens in a new tab',
+  ariaYoutube: 'YouTube — opens in a new tab',
 }
 
 const dicts: Record<Lang, Dict> = { pl, en }
