@@ -34,6 +34,7 @@ W repozytorium jest przykładowy `vercel.json` przy **korzeniu** repo (build z `
 
 - **GitHub:** `.github/workflows/ci.yml` — build frontu i test + build API przy push/PR na `main`/`master`.
 - **GitLab:** `.gitlab-ci.yml` — analogicznie (dostosuj reguły gałęzi pod swój flow).
+- Job **web** używa `npm install` (zamiast `npm ci`), bo Vite 8/Rolldown potrzebuje opcjonalnych binariów pod Linux; samo `npm ci` bywa z tym niestabilne ([npm/cli#4828](https://github.com/npm/cli/issues/4828)).
 
 Powielanie na GitHub i GitLab: dodaj dwa remotes (`origin` + `gitlab`) i `git push` na oba albo użyj mirror — pipeline uruchomi się osobno w każdej platformie.
 

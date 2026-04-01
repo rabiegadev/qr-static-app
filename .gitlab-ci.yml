@@ -36,7 +36,9 @@ web:build:
   <<: *web_cache
   script:
     - cd apps/web
-    - npm ci
+    # npm ci bywa z błędem na opcjonalnych @rolldown/* (Vite 8 / Linux); npm install respektuje lockfile
+    - npm install -g npm@11
+    - npm install
     - npm run build
 
 api:test:
