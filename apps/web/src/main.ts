@@ -9,6 +9,15 @@ import type {
 import { emojiOrTextToDataUrl, readFileAsDataUrl } from './centerAsset'
 import { exportComposedQrPng } from './exportPng'
 import { getLang, initLangFromStorage, setLang, t } from './i18n'
+import type { WeddingThemeId } from './weddingThemes'
+import {
+  WEDDING_PALETTES,
+  WEDDING_QUICK_PHRASES,
+  WEDDING_THEME_ORDER,
+  cornerSvg,
+  weddingCornerKind,
+  weddingThemeLabelKey,
+} from './weddingThemes'
 
 initLangFromStorage()
 
@@ -115,6 +124,11 @@ interface State {
   captionItalic: boolean
   captionUnderline: boolean
   activeColorTarget: ColorTarget
+  weddingTheme: WeddingThemeId
+  weddingSubline: string
+  weddingShowCorners: boolean
+  weddingAutoPalette: boolean
+  weddingExportOrnament: boolean
 }
 
 const state: State = {
@@ -141,6 +155,11 @@ const state: State = {
   captionItalic: false,
   captionUnderline: false,
   activeColorTarget: 'fg1',
+  weddingTheme: 'none',
+  weddingSubline: '',
+  weddingShowCorners: true,
+  weddingAutoPalette: true,
+  weddingExportOrnament: true,
 }
 
 let debounceT = 0
@@ -316,10 +335,19 @@ function mount(): void {
 
         <main class="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-12 items-start flex-1 min-h-0">
           <section class="order-1 lg:order-1 space-y-4 lg:sticky lg:top-4 lg:self-start lg:z-20">
-            <div id="preview-outer" class="${PREVIEW_FRAME_CLASS}">
-              <p id="cap-above" class="hidden text-center text-slate-300 mb-3 max-w-[min(100%,320px)] mx-auto break-words"></p>
-              <div id="qr-host" class="flex items-center justify-center [&_svg]:max-w-full [&_canvas]:max-w-full"></div>
-              <p id="cap-below" class="hidden text-center text-slate-300 mt-3 max-w-[min(100%,320px)] mx-auto break-words"></p>
+            <div id="wedding-wrap" class="wedding-wrap" data-wedding="none">
+              <p id="wedding-sub-above" class="wedding-subline hidden text-center mb-2 max-w-[min(100%,340px)] mx-auto px-1 text-slate-300"></p>
+              <div class="relative z-[1]">
+                <div id="wc-tl" class="wedding-corner wedding-corner-tl hidden"></div>
+                <div id="wc-tr" class="wedding-corner wedding-corner-tr hidden"></div>
+                <div id="wc-bl" class="wedding-corner wedding-corner-bl hidden"></div>
+                <div id="wc-br" class="wedding-corner wedding-corner-br hidden"></div>
+                <div id="preview-outer" class="${PREVIEW_FRAME_CLASS}">
+                  <p id="cap-above" class="hidden text-center text-slate-300 mb-3 max-w-[min(100%,320px)] mx-auto break-words"></p>
+                  <div id="qr-host" class="flex items-center justify-center [&_svg]:max-w-full [&_canvas]:max-w-full"></div>
+                  <p id="cap-below" class="hidden text-center text-slate-300 mt-3 max-w-[min(100%,320px)] mx-auto break-words"></p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -459,6 +487,31 @@ function mount(): void {
               </div>
             </div>
 
+            <fieldset class="rounded-xl border border-rose-500/25 bg-rose-950/15 p-4 space-y-3">
+              <legend class="text-sm font-medium text-rose-100/90 px-1" id="l-wedding-section"></legend>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1" for="f-wedding-theme" id="l-wedding-theme"></label>
+                <select id="f-wedding-theme" class="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"></select>
+              </div>
+              <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                <input type="checkbox" id="f-wedding-auto-pal" class="rounded border-white/20 bg-slate-900 text-rose-500" checked />
+                <span id="l-wedding-auto-pal"></span>
+              </label>
+              <button type="button" id="btn-wedding-palette" class="w-full rounded-xl border border-rose-500/35 bg-rose-950/25 py-2 text-xs font-medium text-rose-100/90 hover:bg-rose-900/35 transition"></button>
+              <div>
+                <p class="text-[11px] text-slate-500 mb-1.5" id="l-wedding-quick"></p>
+                <div id="wedding-quick-row" class="flex flex-wrap gap-1"></div>
+              </div>
+              <div>
+                <label class="block text-sm text-slate-300 mb-1" for="f-wedding-sub" id="l-wedding-sub"></label>
+                <input type="text" id="f-wedding-sub" maxlength="120" class="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm" />
+              </div>
+              <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                <input type="checkbox" id="f-wedding-corners" class="rounded border-white/20 bg-slate-900 text-rose-500" checked />
+                <span id="l-wedding-corners"></span>
+              </label>
+            </fieldset>
+
             <fieldset class="rounded-xl border border-violet-500/25 bg-violet-950/20 p-4 space-y-4">
               <legend class="text-sm font-medium text-violet-200 px-1" id="l-export"></legend>
 
@@ -489,6 +542,12 @@ function mount(): void {
               <div>
                 <label class="block text-xs text-slate-400 mb-1" for="f-expsize" id="l-expsize"></label>
                 <select id="f-expsize" class="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"></select>
+              </div>
+              <div id="wedding-export-wrap" class="hidden">
+                <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                  <input type="checkbox" id="f-wedding-export-frame" class="rounded border-white/20 bg-slate-900 text-violet-500" checked />
+                  <span id="l-wedding-export-frame"></span>
+                </label>
               </div>
               <button type="button" id="btn-dl" class="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 hover:from-violet-500 hover:to-fuchsia-500 transition"></button>
             </fieldset>
@@ -566,6 +625,20 @@ function wire(root: HTMLElement): void {
   const qrHost = qs<HTMLElement>('#qr-host')!
   const langPl = qs<HTMLButtonElement>('#lang-pl')!
   const langEn = qs<HTMLButtonElement>('#lang-en')!
+  const weddingWrap = qs<HTMLElement>('#wedding-wrap')!
+  const weddingSubAbove = qs<HTMLElement>('#wedding-sub-above')!
+  const wcTl = qs<HTMLElement>('#wc-tl')!
+  const wcTr = qs<HTMLElement>('#wc-tr')!
+  const wcBl = qs<HTMLElement>('#wc-bl')!
+  const wcBr = qs<HTMLElement>('#wc-br')!
+  const elWeddingTheme = qs<HTMLSelectElement>('#f-wedding-theme')!
+  const elWeddingAutoPal = qs<HTMLInputElement>('#f-wedding-auto-pal')!
+  const btnWeddingPalette = qs<HTMLButtonElement>('#btn-wedding-palette')!
+  const weddingQuickRow = qs<HTMLElement>('#wedding-quick-row')!
+  const elWeddingSub = qs<HTMLInputElement>('#f-wedding-sub')!
+  const elWeddingCorners = qs<HTMLInputElement>('#f-wedding-corners')!
+  const weddingExportWrap = qs<HTMLElement>('#wedding-export-wrap')!
+  const elWeddingExportFrame = qs<HTMLInputElement>('#f-wedding-export-frame')!
 
   const wells: Record<ColorTarget, HTMLElement> = {
     fg1: wellFg1,
@@ -680,6 +753,29 @@ function wire(root: HTMLElement): void {
   const sizes = ['512', '1024', '2048', '4096']
   fillSelect(elExpSize, sizes)
 
+  const fillWeddingThemeOptions = () => {
+    const cur = (elWeddingTheme.value || state.weddingTheme) as WeddingThemeId
+    elWeddingTheme.innerHTML = WEDDING_THEME_ORDER.map(
+      (id) => `<option value="${id}">${t(weddingThemeLabelKey(id))}</option>`,
+    ).join('')
+    elWeddingTheme.value = WEDDING_THEME_ORDER.includes(cur) ? cur : state.weddingTheme
+  }
+  fillWeddingThemeOptions()
+
+  const fillWeddingQuickRow = () => {
+    weddingQuickRow.innerHTML = WEDDING_QUICK_PHRASES.map((row) => {
+      const label = getLang() === 'pl' ? row.pl : row.en
+      const safe = label.replace(/"/g, '&quot;').replace(/</g, '')
+      return `<button type="button" class="wedding-quick-btn rounded-lg border border-white/10 bg-slate-950/50 px-2 py-1 text-[10px] text-slate-400 hover:border-rose-500/40 hover:text-rose-100/90 transition" data-phrase="${safe}">${label}</button>`
+    }).join('')
+  }
+  fillWeddingQuickRow()
+
+  elWeddingSub.value = state.weddingSubline
+  elWeddingAutoPal.checked = state.weddingAutoPalette
+  elWeddingCorners.checked = state.weddingShowCorners
+  elWeddingExportFrame.checked = state.weddingExportOrnament
+
   presetRow.innerHTML = PRESET_COLORS.map(
     (c) =>
       `<button type="button" data-preset="${c}" title="${c}" class="preset-btn h-8 w-8 rounded-lg border border-white/15 shadow-inner hover:ring-2 hover:ring-violet-500/50 transition" style="background:${c}"></button>`,
@@ -719,6 +815,57 @@ function wire(root: HTMLElement): void {
     state.emojiText = elEmoji.value
     schedule()
   })
+
+  function syncColorFormFromState(): void {
+    elFgGrad.checked = state.fgGradient
+    elBgGrad.checked = state.bgGradient
+    cFg1.value = state.fg1
+    cFg2.value = state.fg2
+    cBg1.value = state.bg1
+    cBg2.value = state.bg2
+    syncHiddenWells()
+    updateColorUi()
+  }
+
+  function applyWeddingPaletteTheme(theme: WeddingThemeId): void {
+    const p = WEDDING_PALETTES[theme]
+    if (!p) return
+    state.fg1 = p.fg1
+    state.fg2 = p.fg2
+    state.bg1 = p.bg1
+    state.bg2 = p.bg2
+    state.fgGradient = p.fgGradient
+    state.bgGradient = p.bgGradient
+    syncColorFormFromState()
+    schedule()
+  }
+
+  function updateWeddingVisual(): void {
+    weddingWrap.dataset.wedding = state.weddingTheme
+    const tx = state.weddingSubline.trim()
+    weddingSubAbove.textContent = tx
+    weddingSubAbove.className = [
+      'wedding-subline text-center mb-2 max-w-[min(100%,340px)] mx-auto px-1',
+      tx ? (state.weddingTheme === 'none' ? 'text-slate-400' : '') : 'hidden',
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    const kind = weddingCornerKind(state.weddingTheme)
+    const showCorn =
+      state.weddingShowCorners && kind !== 'none' && state.weddingTheme !== 'none'
+    const svg = showCorn ? cornerSvg(kind, 'drop-shadow-sm') : ''
+    for (const el of [wcTl, wcTr, wcBl, wcBr]) {
+      if (!showCorn || !svg) {
+        el.classList.add('hidden')
+        el.innerHTML = ''
+      } else {
+        el.classList.remove('hidden')
+        el.innerHTML = svg
+      }
+    }
+    weddingExportWrap.classList.toggle('hidden', state.weddingTheme === 'none')
+  }
 
   const schedule = () => {
     window.clearTimeout(debounceT)
@@ -764,7 +911,20 @@ function wire(root: HTMLElement): void {
     qs('#l-exp-cap-with')!.textContent = t('exportCaptionWith')
     qs('#l-exp-cap-without')!.textContent = t('exportCaptionWithout')
     qs('#l-expsize')!.textContent = t('exportSize')
+    qs('#l-wedding-export-frame')!.textContent = t('weddingExportFrame')
     btnDl.textContent = t('download')
+
+    qs('#l-wedding-section')!.textContent = t('weddingSection')
+    qs('#l-wedding-theme')!.textContent = t('weddingTheme')
+    qs('#l-wedding-auto-pal')!.textContent = t('weddingAutoPalette')
+    btnWeddingPalette.textContent = t('weddingApplyPaletteBtn')
+    qs('#l-wedding-quick')!.textContent = t('weddingQuick')
+    qs('#l-wedding-sub')!.textContent = t('weddingSubline')
+    elWeddingSub.placeholder = t('weddingSublinePh')
+    qs('#l-wedding-corners')!.textContent = t('weddingCorners')
+    fillWeddingThemeOptions()
+    fillWeddingQuickRow()
+    updateWeddingVisual()
 
     qs('#footer-home')!.textContent = t('footerHome')
     qs('#footer-fb')!.setAttribute('aria-label', t('ariaFacebook'))
@@ -898,12 +1058,53 @@ function wire(root: HTMLElement): void {
     updateCaption(capAbove, capBelow)
   })
 
+  elWeddingTheme.addEventListener('change', () => {
+    state.weddingTheme = elWeddingTheme.value as WeddingThemeId
+    if (state.weddingAutoPalette && state.weddingTheme !== 'none') {
+      applyWeddingPaletteTheme(state.weddingTheme)
+    }
+    updateWeddingVisual()
+  })
+  elWeddingAutoPal.addEventListener('change', () => {
+    state.weddingAutoPalette = elWeddingAutoPal.checked
+  })
+  btnWeddingPalette.addEventListener('click', () => {
+    if (state.weddingTheme !== 'none') applyWeddingPaletteTheme(state.weddingTheme)
+  })
+  weddingQuickRow.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.wedding-quick-btn[data-phrase]')
+    if (!b?.dataset.phrase) return
+    elWeddingSub.value = b.dataset.phrase
+    state.weddingSubline = elWeddingSub.value
+    updateWeddingVisual()
+  })
+  elWeddingSub.addEventListener('input', () => {
+    state.weddingSubline = elWeddingSub.value
+    updateWeddingVisual()
+  })
+  elWeddingCorners.addEventListener('change', () => {
+    state.weddingShowCorners = elWeddingCorners.checked
+    updateWeddingVisual()
+  })
+  elWeddingExportFrame.addEventListener('change', () => {
+    state.weddingExportOrnament = elWeddingExportFrame.checked
+  })
+
   btnDl.addEventListener('click', async () => {
     const size = Number(elExpSize.value)
     const bgRadio = root.querySelector<HTMLInputElement>('input[name="exp-bg"]:checked')
     const capRadio = root.querySelector<HTMLInputElement>('input[name="exp-cap"]:checked')
     const canvasBg = bgRadio?.value === 'transparent' ? 'transparent' : 'editor'
     const includeCaption = capRadio?.value === 'with'
+
+    const weddingSpec =
+      state.weddingTheme === 'none'
+        ? undefined
+        : {
+            theme: state.weddingTheme,
+            subline: state.weddingSubline,
+            drawOrnament: state.weddingExportOrnament,
+          }
 
     await exportComposedQrPng(
       buildOptions(size, true),
@@ -925,6 +1126,7 @@ function wire(root: HTMLElement): void {
         underline: state.captionUnderline,
         color: '#cbd5e1',
       },
+      weddingSpec,
     )
   })
 
@@ -945,6 +1147,7 @@ function wire(root: HTMLElement): void {
 
   document.documentElement.lang = getLang()
 
+  updateWeddingVisual()
   updateCaption(capAbove, capBelow)
   syncQr(qrHost)
 }

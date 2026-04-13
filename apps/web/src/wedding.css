@@ -1,0 +1,203 @@
+/* Motywy weselne — klasy na #wedding-wrap[data-wedding="…"] */
+
+.wedding-wrap {
+  position: relative;
+  border-radius: 1.25rem;
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.wedding-wrap[data-wedding='none'] {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.wedding-corner {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  color: inherit;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.15));
+}
+
+.wedding-corner-tl {
+  top: 0.35rem;
+  left: 0.35rem;
+}
+.wedding-corner-tr {
+  top: 0.35rem;
+  right: 0.35rem;
+}
+.wedding-corner-bl {
+  bottom: 0.35rem;
+  left: 0.35rem;
+}
+.wedding-corner-br {
+  bottom: 0.35rem;
+  right: 0.35rem;
+}
+
+.wedding-subline {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+/* ——— Motywy ——— */
+
+.wedding-wrap[data-wedding='classic-gold'] {
+  padding: 1.35rem 1.25rem 1.5rem;
+  background: linear-gradient(165deg, #fffef8 0%, #f5ecd8 45%, #ebe1c8 100%);
+  border: 3px double #b8860b;
+  box-shadow:
+    0 0 0 1px rgb(184 134 11 / 0.35),
+    0 12px 40px -12px rgb(0 0 0 / 0.25);
+  color: #8b6914;
+}
+
+.wedding-wrap[data-wedding='blush-romance'] {
+  padding: 1.4rem 1.2rem 1.55rem;
+  background: radial-gradient(ellipse at top, #fff1f2, #fce7f3 55%, #fbcfe8);
+  border: 2px solid rgb(190 24 93 / 0.35);
+  box-shadow:
+    inset 0 0 40px rgb(251 207 232 / 0.5),
+    0 10px 36px -10px rgb(157 23 77 / 0.35);
+  color: #9d174d;
+}
+
+.wedding-wrap[data-wedding='sage-garden'] {
+  padding: 1.35rem;
+  background: linear-gradient(180deg, #f7fee7 0%, #ecfccb 50%, #d9f99d 100%);
+  border: 2px dashed rgb(63 98 18 / 0.45);
+  box-shadow: 0 8px 32px -8px rgb(54 83 20 / 0.25);
+  color: #3f6212;
+}
+
+.wedding-wrap[data-wedding='burgundy-gold'] {
+  padding: 1.4rem;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 40%, #fed7aa);
+  border: 3px solid rgb(127 29 29 / 0.55);
+  outline: 2px solid rgb(180 83 9 / 0.45);
+  outline-offset: 4px;
+  color: #7f1d1d;
+  box-shadow: 0 12px 40px -12px rgb(69 10 10 / 0.35);
+}
+
+.wedding-wrap[data-wedding='champagne-lace'] {
+  padding: 1.45rem;
+  background: linear-gradient(180deg, #fafaf9 0%, #f5f5f4 100%);
+  border: 1px solid rgb(214 211 209 / 0.9);
+  box-shadow:
+    0 0 0 6px #fafaf9,
+    0 0 0 7px rgb(168 162 158 / 0.35),
+    0 16px 48px -16px rgb(0 0 0 / 0.12);
+  color: #57534e;
+}
+
+.wedding-wrap[data-wedding='hearts-confetti'] {
+  padding: 1.5rem 1.2rem;
+  background: linear-gradient(160deg, #fff1f2, #ffe4e6 60%, #fecdd3);
+  border: 2px solid rgb(225 29 72 / 0.4);
+  box-shadow: inset 0 -30px 50px -40px rgb(244 63 94 / 0.35);
+  color: #be123c;
+}
+
+.wedding-wrap[data-wedding='rings-elegant'] {
+  padding: 1.5rem 1.3rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid rgb(100 116 139 / 0.45);
+  border-radius: 1.75rem;
+  box-shadow:
+    0 0 0 4px rgb(248 250 252 / 0.9),
+    0 0 0 5px rgb(148 163 184 / 0.35),
+    0 20px 50px -20px rgb(15 23 42 / 0.2);
+  color: #475569;
+}
+
+.wedding-wrap[data-wedding='rustic-kraft'] {
+  padding: 1.35rem;
+  background: linear-gradient(185deg, #fef3c7, #fde68a 70%, #fcd34d);
+  border: 3px solid rgb(120 53 15 / 0.5);
+  box-shadow:
+    4px 4px 0 rgb(120 53 15 / 0.12),
+    8px 8px 0 rgb(120 53 15 / 0.06);
+  color: #78350f;
+}
+
+.wedding-wrap[data-wedding='art-deco-glam'] {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 50%, #fef08a);
+  border: 4px double rgb(15 23 42 / 0.85);
+  box-shadow:
+    inset 0 0 0 2px rgb(180 83 9 / 0.25),
+    0 12px 40px -10px rgb(180 83 9 / 0.35);
+  color: #0f172a;
+}
+
+.wedding-wrap[data-wedding='midnight-stars'] {
+  padding: 1.45rem;
+  background:
+    radial-gradient(circle at 20% 30%, rgb(251 191 36 / 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgb(196 181 253 / 0.15) 0%, transparent 35%),
+    linear-gradient(160deg, #1e1b4b, #312e81 50%, #1e1b4b);
+  border: 1px solid rgb(251 191 36 / 0.35);
+  box-shadow:
+    0 0 24px rgb(251 191 36 / 0.12),
+    inset 0 0 60px rgb(0 0 0 / 0.2);
+  color: #fde68a;
+}
+
+.wedding-wrap[data-wedding='lavender-dream'] {
+  padding: 1.4rem;
+  background: radial-gradient(ellipse at center, #faf5ff, #f3e8ff 70%, #e9d5ff);
+  border: 2px solid rgb(107 33 168 / 0.35);
+  box-shadow: inset 0 0 30px rgb(168 85 247 / 0.12);
+  color: #6b21a8;
+}
+
+.wedding-wrap[data-wedding='white-minimal'] {
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgb(226 232 240 / 0.95);
+  box-shadow: 0 4px 24px -8px rgb(15 23 42 / 0.08);
+  color: #64748b;
+}
+
+.wedding-wrap[data-wedding='peach-joy'] {
+  padding: 1.45rem;
+  background: linear-gradient(200deg, #fff7ed, #ffedd5 45%, #fed7aa);
+  border: 2px solid rgb(234 88 12 / 0.4);
+  border-radius: 2rem;
+  box-shadow: 0 10px 36px -10px rgb(234 88 12 / 0.25);
+  color: #c2410c;
+}
+
+/* Delikatne „konfetti” tylko dla jednego motywu (pseudo) */
+.wedding-wrap[data-wedding='hearts-confetti']::before {
+  content: '♥ · ✦ · ♥';
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.wedding-wrap[data-wedding='midnight-stars']::after {
+  content: '✦  ·  ✧  ·  ✦';
+  position: absolute;
+  bottom: 0.45rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  opacity: 0.5;
+  pointer-events: none;
+}

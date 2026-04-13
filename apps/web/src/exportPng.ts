@@ -1,5 +1,6 @@
 import type { Options } from 'qr-code-styling'
 import QRCodeStyling from 'qr-code-styling'
+import type { WeddingThemeId } from './weddingThemes'
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
@@ -29,6 +30,82 @@ export interface ExportEditorBg {
   c2: string
 }
 
+export interface ExportWeddingSpec {
+  theme: WeddingThemeId
+  subline: string
+  /** Prosta złota / akcentowa ramka wokół QR na PNG */
+  drawOrnament: boolean
+}
+
+function weddingAccentColor(theme: WeddingThemeId): string {
+  if (theme === 'midnight-stars') return '#fbbf24'
+  if (theme === 'blush-romance' || theme === 'hearts-confetti' || theme === 'peach-joy') return '#be185d'
+  if (theme === 'sage-garden') return '#3f6212'
+  if (theme === 'lavender-dream') return '#7c3aed'
+  return '#b8860b'
+}
+
+function drawWeddingOrnament(
+  ctx: CanvasRenderingContext2D,
+  qrX: number,
+  qrY: number,
+  qrSize: number,
+  theme: WeddingThemeId,
+): void {
+  if (theme === 'none') return
+  const accent = weddingAccentColor(theme)
+  const pad = Math.max(6, Math.round(qrSize * 0.035))
+  const x = qrX - pad
+  const y = qrY - pad
+  const w = qrSize + pad * 2
+  const h = qrSize + pad * 2
+  ctx.save()
+  ctx.strokeStyle = accent
+  ctx.lineWidth = Math.max(1.5, qrSize / 140)
+  ctx.strokeRect(x, y, w, h)
+  ctx.globalAlpha = 0.65
+  ctx.strokeRect(x + 3, y + 3, w - 6, h - 6)
+  ctx.globalAlpha = 1
+  const r = Math.max(2, qrSize * 0.018)
+  ctx.fillStyle = accent
+  for (const [cx, cy] of [
+    [x, y],
+    [x + w, y],
+    [x, y + h],
+    [x + w, y + h],
+  ] as const) {
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
+function drawWeddingSubline(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxW: number,
+  color: string,
+): void {
+  const t = text.trim()
+  if (!t) return
+  ctx.save()
+  ctx.font = '600 11px system-ui, "Segoe UI", sans-serif'
+  ctx.fillStyle = color
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'alphabetic'
+  ctx.globalAlpha = 0.95
+  const lines = wrapText(ctx, t, maxW - 16)
+  let ly = y
+  for (const line of lines) {
+    ctx.fillText(line, x, ly)
+    ly += 14
+  }
+  ctx.restore()
+}
+
 export async function exportComposedQrPng(
   qrOptions: Options,
   qrPixelSize: number,
@@ -36,6 +113,7 @@ export async function exportComposedQrPng(
   canvasBg: ExportCanvasBg,
   editorBg: ExportEditorBg,
   caption: ExportCaptionSpec,
+  wedding?: ExportWeddingSpec,
 ): Promise<void> {
   const qr = new QRCodeStyling({
     ...qrOptions,
@@ -51,6 +129,9 @@ export async function exportComposedQrPng(
   const pad = Math.max(12, Math.round(qrPixelSize * paddingFraction))
   const capGap = Math.round(pad * 0.6)
   const capText = caption.include ? caption.text.trim() : ''
+  const wedSub = wedding?.subline?.trim() ?? ''
+  const theme = wedding?.theme ?? 'none'
+  const wedAccent = weddingAccentColor(theme)
 
   let capBlockH = 0
   let capW = 0
@@ -63,7 +144,16 @@ export async function exportComposedQrPng(
     capBlockH = Math.ceil(caption.fontPx * 1.35) + capGap
   }
 
-  const contentW = Math.max(qrPixelSize, capW + pad)
+  let wedBlockH = 0
+  let wedW = 0
+  if (wedSub && measure) {
+    measure.font = '600 11px system-ui, "Segoe UI", sans-serif'
+    const wedLines = wrapText(measure, wedSub, qrPixelSize + 100)
+    wedW = wedLines.reduce((m, line) => Math.max(m, measure.measureText(line).width), 0)
+    wedBlockH = wedLines.length * 14 + Math.floor(capGap * 0.55)
+  }
+
+  const contentW = Math.max(qrPixelSize, capW + pad, wedW + pad)
   let y = pad
   const totalW = contentW + pad * 2
 
@@ -73,6 +163,7 @@ export async function exportComposedQrPng(
   let totalH = pad * 2 + qrPixelSize
   if (capAbove) totalH += capBlockH
   if (capBelow) totalH += capBlockH
+  if (wedSub) totalH += wedBlockH
 
   const canvas = document.createElement('canvas')
   canvas.width = totalW
@@ -98,7 +189,15 @@ export async function exportComposedQrPng(
     y += capBlockH
   }
 
+  if (wedSub) {
+    drawWeddingSubline(ctx, wedSub, totalW / 2, y + 12, totalW, wedAccent)
+    y += wedBlockH
+  }
+
   ctx.drawImage(bmp, qrX, y, qrPixelSize, qrPixelSize)
+  if (wedding?.drawOrnament && theme !== 'none') {
+    drawWeddingOrnament(ctx, qrX, y, qrPixelSize, theme)
+  }
   y += qrPixelSize
 
   if (capBelow) {
